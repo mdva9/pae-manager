@@ -35,14 +35,15 @@ def get_course(acronym: str):
     return course
 
 
-@router.put("/{acronym}",response_model=dict)
-def update_course(acronym: str, course: Course):
+@router.put("/{acronym}")
+def update(acronym: str, course: Course):
     success = update_course(acronym,course.dict())
     if not success:
         raise HTTPException(status_code=404,detail=f"Course not found{acronym}")
+    return {"message":f"{acronym} is update "}
 
 @router.delete("/{acronym}",response_model=dict)
-def delete_course(acronym: str):
+def delete(acronym: str):
     success = delete_course(acronym)
     if not success:
         raise HTTPException(status_code=404,detail=f"Course not found{acronym}")

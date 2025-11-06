@@ -10,7 +10,7 @@ courses = db['courses']
 
 # Add course
 def add (course:Course) -> str:
-    if courses.find_one({"acronym": course.acronym}) is None:
+    if courses.find_one({"acronym": course.acronym}) is not None:
         raise ValueError(f"Le cours {course.acronym} est déjà présent")
 
     result = courses.insert_one(course.dict())
@@ -23,7 +23,9 @@ def all_course()->List[dict]:
 
 # Find Course
 def find_course_by_acronym (acronym: str) -> Optional[dict]:
-    course = courses.find_one({"acronym": acronym}).id({"_id": 0})
+    course = courses.find_one({"acronym": acronym}, {"_id": 0})
+    if not course:
+        raise ValueError(f"Course not found{acronym}")
     return course
 
 # Update Course
