@@ -29,7 +29,7 @@ def list_prereqs(course_acronym: str):
         raise HTTPException(status_code=500, detail=f"Erreur Neo4j : {str(e)}")
 
 @router.delete("/",response_model=dict)
-def delete_prereq(prereq: Prereq):
+def delete_pre(prereq: Prereq):
     try:
         message = delete_prereq(course_acronym=prereq.course_acronym,prereq_acronym=prereq.prereq_acronym)
         return {"message":message}

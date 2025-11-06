@@ -9,12 +9,17 @@ driver = get_neo4j_driver()
 #Add Prereq
 def add_prereq(course_acronym:str,prereq_acronym:str):
 
-    query="""
-    MERGE (c:Course {course_acronym: $course})
-    MERGE (p:Course {prereq_acronym: $prereq})
-    MERGE (p)-[:IS_PREREQ_OF]->(c)
-    """
+    if not course_acronym or not prereq_acronym:
+        raise ValueError("Les acronymes ne peuvent pas être vides.")
 
+    query = """
+       MERGE (p:Course {acronym: $prereq})
+         ON CREATE SET p.is_prereq = true
+       MERGE (c:Course {acronym: $course})
+         ON CREATE SET c.is_prereq = false
+       MERGE (p)-[:IS_PREREQUISITE_OF]->(c)
+       RETURN p, c
+       """
     with driver.session() as session:
         session.run(query,course=course_acronym,prereq=prereq_acronym)
 
@@ -23,21 +28,19 @@ def add_prereq(course_acronym:str,prereq_acronym:str):
 #Get All Prereq
 def get_all(course_acronym: str):
     query = """
-    MATCH (p:Course)-[:IS_PREREQ_OF]->(c:Course {acronym: $course})
-    RETURN p.acronym AS prerequisite
-    """
+           MATCH (p:Course)-[:IS_PREREQUISITE_OF]->(c:Course {acronym: $course})
+           RETURN p.acronym AS prerequisite
+           """
     with driver.session() as session:
         results = session.run(query, course=course_acronym)
-        prereqs = [record["prereq"] for record in results]
+        prereqs = [record["prerequisite"] for record in results]
     return prereqs
 
 def delete_prereq(course_acronym:str,prereq_acronym:str):
-
-    query= """
-    MATCH (p:Course {acronym: $prerequisite})-[r:IS_PREREQ_OF]->(c:Course {acronym: $course})
-    DELETE r
-    """
-
+    query = """
+       MATCH (p:Course {acronym: $prereq})-[r:IS_PREREQUISITE_OF]->(c:Course {acronym: $course})
+       DELETE r
+       """
     with driver.session() as session:
         session.run(query, course=course_acronym,prereq=prereq_acronym)
     return f"Relation Deleted : {prereq_acronym} -> {course_acronym}"
